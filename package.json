@@ -1,0 +1,21 @@
+{
+  "name": "mpe-export",
+  "version": "1.0.0",
+  "description": "Headless Markdown -> HTML/PDF exporter powered by crossnote (the engine behind Markdown Preview Enhanced). Agent/LLM friendly CLI with --json output.",
+  "license": "MIT",
+  "bin": {
+    "mpe-export": "bin/mpe-export.js"
+  },
+  "main": "lib/exporter.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node test/smoke.js"
+  },
+  "dependencies": {
+    "crossnote": "^0.9.31",
+    "subset-font": "^2.5.0",
+    "yaml": "^2.3.2"
+  }
+}

@@ -1,0 +1,13 @@
+node_modules/
+*.html
+*.pdf
+*.png
+*.jpeg
+.mpe-*
+.playwright-mcp/
+*.bak
+*.bak-*
+test/.tmp*
+
+# 示例文档引用的演示图片是源码的一部分，不放行会导致示例损坏
+!examples/demo-image.png
