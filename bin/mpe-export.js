@@ -51,12 +51,14 @@ async function main() {
           presets: listPresets(),
           lastUsed: getLastPreset(),
           note: 'lastUsed 为上次成功导出使用的预设；用 --preset last 可直接沿用',
-          manual: '使用说明书: mpe-export --help presets（选择指引）/ --help pagination（分页三开关）/ --help agent（完整 agent 手册）',
+          manual: '使用说明书: mpe-export --help presets（选择指引）/ --help pagination（分页/页脚/目录页）/ --help agent（完整 agent 手册）',
           pagination: {
             note: '以下开关仅 PDF 生效，与预设正交可叠加，front-matter 同名键等价',
             '--pagination': '块级不断页：代码块/图片/引用块/callout 整块搬运不切断',
             '--pagination-level': '标题换页 h1|h2|h3：父章节内第一个该级标题不换页，其余起新页（蕴含 --pagination）',
             '--footer': '页脚：每页章节面包屑 + 页码（蕴含 --pagination）',
+            '--toc': '目录页：正文前插入带真实页码的目录（蕴含 --pagination）',
+            '--cover': '封面：html/png 插在最前（封面→目录→正文；蕴含 --pagination）',
           },
         },
         null,
@@ -161,10 +163,16 @@ async function main() {
         '💡 提示: 本次使用默认简洁样式。排版预设可选: claude（亮色主题风）/ claude-dark（暗色）/ phycat（讲义 A4）/ phycat-cherry 等 11 个 Phycat 主题配色变体（8 亮 3 暗），详情: mpe-export --preset list',
       );
     }
-    const usedPagination = args.pagination || args.footer || args.paginationLevel;
+    const usedPagination =
+      args.pagination ||
+      args.footer ||
+      args.paginationLevel ||
+      args.toc ||
+      args.tocLevel ||
+      args.cover;
     if ((args.format === 'pdf' || args.format === 'both') && !usedPagination) {
       console.error(
-        '💡 提示: 本次 PDF 为原生分页（代码块/引用块可能被切断）。可选: --pagination 整块不断页 / --pagination-level h2|h3 章节换页 / --footer 页脚+页码',
+        '💡 提示: 本次 PDF 为原生分页（代码块/引用块可能被切断）。可选: --pagination 整块不断页 / --pagination-level h2|h3 章节换页 / --footer 页脚+页码 / --toc 目录页',
       );
     }
   };
@@ -191,6 +199,10 @@ async function main() {
         footer: args.footer,
         pagination: args.pagination,
         paginationLevel: args.paginationLevel,
+        toc: args.toc,
+        tocLevel: args.tocLevel,
+        tocTitle: args.tocTitle,
+        cover: args.cover,
         bgPattern: args.bgPattern,
         fixMd: args.fixMd,
         mdNormalize: args.mdNormalize,
@@ -233,10 +245,16 @@ async function main() {
         '本次使用默认简洁样式（未指定预设）。可选排版预设: claude（亮色主题风）/ claude-dark（暗色）/ phycat（讲义 A4）/ phycat-cherry 等 11 个 Phycat 主题配色变体（8 亮 3 暗，霞鹜文楷正文）；详情: mpe-export --preset list。若用户在意样式，建议下次询问偏好后加 --preset <name> 重导。';
     }
     // PDF 且未用任何分页开关时，提示分页能力存在（agent 可按用户意图追加）
-    const usedPagination = args.pagination || args.footer || args.paginationLevel;
+    const usedPagination =
+      args.pagination ||
+      args.footer ||
+      args.paginationLevel ||
+      args.toc ||
+      args.tocLevel ||
+      args.cover;
     if (!anyFailed && (args.format === 'pdf' || args.format === 'both') && !usedPagination) {
       out.paginationHint =
-        '本次 PDF 为 Chrome 原生分页（代码块/引用块可能被换页切断）。可选: --pagination（整块不断页）/ --pagination-level h2|h3（章节标题换页，父章节内第一个不换页）/ --footer（页脚+页码+章节面包屑，蕴含分页）。用户若抱怨切断、要章节换页或要页码，追加对应开关重导即可。';
+        '本次 PDF 为 Chrome 原生分页（代码块/引用块可能被换页切断）。可选: --pagination（整块不断页）/ --pagination-level h2|h3（章节标题换页，父章节内第一个不换页）/ --footer（页脚+页码+章节面包屑，蕴含分页）/ --toc（正文前插入带真实页码的目录页，蕴含分页）。用户若抱怨切断、要章节换页、要页码或要目录页，追加对应开关重导即可。';
     }
     process.stdout.write(JSON.stringify(out, null, 2) + '\n');
   } else {

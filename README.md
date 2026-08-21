@@ -27,7 +27,7 @@ mpe-export <file.md> [<file2.md> ...] [选项]
   mpe-export --help              完整手册
   mpe-export --help options      全部选项详解
   mpe-export --help presets      排版预设与选择指引
-  mpe-export --help pagination   分页 / 标题换页 / 页脚（仅 PDF）
+  mpe-export --help pagination   分页 / 标题换页 / 页脚 / 目录页（仅 PDF）
   mpe-export --help agent        Agent 使用手册（决策流程 / 意图映射 / JSON 协议）
 
 选项:
@@ -44,6 +44,13 @@ mpe-export <file.md> [<file2.md> ...] [选项]
       --pagination-level <h1|h2|h3>
                            标题换页（蕴含 --pagination）：父章节内第一个该级
                            标题不换页，其余该级标题各自起新页
+      --toc                PDF 在正文前插入目录页（蕴含 --pagination；
+                           带真实页码；条目过多自动续页）
+      --toc-level <h1|h2|h3>
+                           目录收录级别（默认 h3；单独使用即蕴含 --toc）
+      --toc-title <text>   目录页标题（默认「目录」）
+      --cover <file>       封面 html/png/jpg/svg（仅 PDF，蕴含分页）：
+                           顺序固定为 封面 → 目录页 → 正文；封面无页脚但计入总页数
   -c, --config <json>      NotebookConfig JSON（引擎配置覆盖）
       --pdf-json <json>    PDF 参数，透传给 Chrome page.pdf()
       --html-json <json>   HTML 参数（embed_local_images / embed_svg / offline）
@@ -67,7 +74,7 @@ mpe-export <file.md> [<file2.md> ...] [选项]
 退出码: 0 成功 | 1 导出失败 | 2 参数错误
 ```
 
-## 自动分页与独立页脚（--pagination / --footer，仅 PDF）
+## 自动分页、页脚与目录页（--pagination / --footer / --toc，仅 PDF）
 
 **`--pagination`**（或 front-matter `pagination: true`）：PDF 不走 Chrome 原生
 分页，改在浏览器内按块自动分页（移植并通用化 scan 技能
@@ -78,6 +85,13 @@ postprocess_handout_for_contract.py 的机制）——代码块 / 图片 / 引�
 （蕴含分页，无需再加 `--pagination`）：9px 灰字、顶部 1px 分隔线、左侧章节
 面包屑（当前节点橙色高亮）、右侧 `第 N/M 页`。字体：数字/西文 Georgia、
 中文思源宋体（均子集化内联）。
+
+**`--toc`**（或 front-matter `toc: true`）：在正文前插入目录页（蕴含分页）。
+先按 sheet 排完正文拿到真实页码，再生成「标题 ··· 页码」条目；条目过多
+自动续页，页码计入目录页占用。`--toc-level h1|h2|h3`（默认 h3）控制收录
+深度；`--toc-title` 改标题（默认「目录」）。「目录」进 PDF 书签，但不被
+二次收录进目录。与 `--footer` 叠加时，目录页页脚显示「目录」。`--cover <file>` 把封面插在最前
+（html 用 iframe 铺满 A4，png 用图），顺序：封面 → 目录 → 正文。
 
 **`--pagination-level <h1|h2|h3>`**（或 front-matter `pagination-level: h2`）：
 标题换页（蕴含分页，无需再加 `--pagination`）。规则是"**每个父章节内的第一个
@@ -100,13 +114,16 @@ KaTeX 节点：标题含公式时页脚照常显示分式/上下标，并随页�
    `--pagination-level` 的强制换页边界不上提）；
 5. 孤儿标题清扫：标题落在页尾时剥离并自然重排后续内容（保留标题换页标记）；
 6. 仍超页的图片等比缩小兜底（防裁切）；
-7.（仅 --footer）分页完成后扫描每页标题（h1–h4）生成面包屑——页脚天然知道当前页章节位置。
+7.（仅 --toc）分页完成后按各页标题生成目录页，插在正文前，页码含目录占用；
+8.（仅 --footer）扫描每页标题（h1–h4）生成面包屑——页脚天然知道当前页章节位置。
 
 ```bash
 mpe-export 笔记.md -f pdf --preset phycat-sakura --pagination  # 主题风格 + 整块不断页
 mpe-export 讲义.md -f pdf --preset phycat --footer   # 讲义排版 + 分页 + scan 风格页脚
 mpe-export 笔记.md -f pdf --preset claude --footer   # claude 主题 + 同一页脚
 mpe-export 讲义.md -f pdf --preset phycat --pagination-level h3  # 每节起新页（节内首个小节跟随）
+mpe-export 讲义.md -f pdf --preset phycat --toc --footer         # 目录页 + 页脚页码
+mpe-export 讲义.md -f pdf --preset claude --toc --footer --cover concept-map.html
 ```
 
 ## 块间空行规范化（默认自动）

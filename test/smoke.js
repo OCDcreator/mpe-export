@@ -36,6 +36,74 @@ check('--help 输出帮助', () => {
   const out = run(['--help']);
   if (!out.includes('mpe-export')) throw new Error('帮助文本缺少工具名');
   if (!out.includes('--json')) throw new Error('帮助文本缺少 --json 说明');
+  if (!out.includes('--toc')) throw new Error('帮助文本缺少 --toc 说明');
+});
+
+check('parseArgs 识别 --toc / --toc-level / --toc-title / --cover', () => {
+  const { parseArgs } = require('../lib/args');
+  const a = parseArgs([
+    'a.md', '--toc', '--toc-level', 'h2', '--toc-title', 'Contents',
+    '--cover', 'concept-map.html',
+  ]);
+  if (!a.toc) throw new Error('toc 应为 true');
+  if (a.tocLevel !== 'h2') throw new Error('tocLevel=' + a.tocLevel);
+  if (a.tocTitle !== 'Contents') throw new Error('tocTitle=' + a.tocTitle);
+  if (a.cover !== 'concept-map.html') throw new Error('cover=' + a.cover);
+});
+
+check('buildFooterAssets(--toc) 注入目录分页脚本', () => {
+  const { buildFooterAssets } = require('../lib/footer');
+  const { css, js } = buildFooterAssets({
+    format: 'A4',
+    margin: { top: '14mm', bottom: '15mm', left: '13mm', right: '13mm' },
+    footer: false,
+    toc: true,
+    tocLevel: 'h2',
+    tocTitle: '目录',
+    docTitle: 'demo',
+  });
+  if (!css.includes('.mpe-toc-item')) throw new Error('缺少目录 CSS');
+  if (!js.includes('var TOC_ON = true')) throw new Error('TOC_ON 未开启');
+  if (!js.includes('injectTocPages')) throw new Error('缺少 injectTocPages');
+  if (!js.includes('var TOC_LEVEL = 2')) throw new Error('TOC_LEVEL 应为 2');
+});
+
+check('buildFooterAssets(--cover) 注入封面脚本', () => {
+  const { buildFooterAssets } = require('../lib/footer');
+  const { css, js } = buildFooterAssets({
+    format: 'A4',
+    margin: { top: '18mm', bottom: '18mm', left: '12mm', right: '12mm' },
+    footer: true,
+    toc: true,
+    coverHref: 'file:///C:/tmp/concept-map.html',
+    coverKind: 'html',
+    docTitle: 'demo',
+  });
+  if (!css.includes('.mpe-cover-frame')) throw new Error('缺少封面 CSS');
+  if (!js.includes('injectCoverSheet')) throw new Error('缺少 injectCoverSheet');
+  if (!js.includes("var COVER_KIND = 'html'")) throw new Error('COVER_KIND 未注入');
+  try {
+    new Function(js);
+  } catch (e) {
+    throw new Error('封面分页脚本语法错误: ' + e.message);
+  }
+  try {
+    new Function(js);
+  } catch (e) {
+    throw new Error('目录分页脚本语法错误: ' + e.message);
+  }
+});
+
+check('--toc PDF 导出', () => {
+  const md = path.join(tmp, 'toc-demo.md');
+  fs.writeFileSync(
+    md,
+    '# 文档标题\n\n导语。\n\n## 第一章\n\n内容一。\n\n## 第二章\n\n内容二。\n\n### 小节\n\n内容三。\n',
+  );
+  run([md, '--format', 'pdf', '--toc', '--out', tmp, '--out-name', 'toc_demo']);
+  const pdf = path.join(tmp, 'toc_demo.pdf');
+  if (!fs.existsSync(pdf)) throw new Error('缺少 toc_demo.pdf');
+  if (fs.statSync(pdf).size < 1000) throw new Error('toc_demo.pdf 过小');
 });
 
 check('--version 输出版本', () => {
