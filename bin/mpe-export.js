@@ -207,6 +207,7 @@ async function main() {
         fixMd: args.fixMd,
         mdNormalize: args.mdNormalize,
         bookmarks: args.bookmarks,
+        mergeCells: args.mergeCells,
         open: args.open,
       });
       results.push({ ...r, ok: true });

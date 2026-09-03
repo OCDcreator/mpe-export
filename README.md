@@ -66,6 +66,8 @@ mpe-export <file.md> [<file2.md> ...] [选项]
       --no-md-normalize    关闭内存规范化（front-matter: md-normalize: false）
       --no-bookmarks       关闭 PDF 书签大纲（默认开：按 h1-h6 标题层级生成，
                            阅读器侧栏跳转；front-matter: bookmarks: false）
+      --no-merge-cells     关闭表格单元格合并（默认开，详见下文「表格单元格合并」；
+                           front-matter: merge-cells: false）
       --open               导出后打开产物
   -j, --json               输出机器可读 JSON
   -q, --quiet              抑制日志
@@ -147,6 +149,29 @@ mpe-export 讲义.md -f pdf --preset claude --toc --footer --cover concept-map.h
 node tools/fix-md-spacing.js 讲义.md          # 就地修复（留 .bak）
 node tools/fix-md-spacing.js --check 讲义.md  # 只报告缺几个空行
 ```
+
+## 表格单元格合并（默认开启）
+
+支持 MPE 扩展表格语法，与 Markdown Preview Enhanced 插件一致：
+
+```markdown
+| A | B | C |
+|---|---|---|
+| 1 | > | 3 |   ← 只含 > 的单元格向右合并（colspan）
+| ^ | x | 6 |   ← 只含 ^ 的单元格向上合并（rowspan）
+| 7 |   | 9 |   ← 空单元格向左合并（colspan）
+```
+
+crossnote 引擎本身默认关闭该语法，本工具改为**默认开启**。关闭方式
+（优先级从高到低）：
+
+1. `--config '{"enableExtendedTableSyntax": false}'`（引擎配置直通，最高）；
+2. `--no-merge-cells`，或源文件 front-matter `merge-cells: false`；
+3. 源目录 `.crossnote/config.js` 显式设置 `enableExtendedTableSyntax`
+   （此时该键交给目录配置决定）。
+
+分页 PDF（`--pagination` 系列）对合并单元格同样安全：跨页拆表时分组单元格
+会复制到续页并裁短 rowspan，续表不缺列、不错位。
 
 ## 排版预设（--preset）
 
