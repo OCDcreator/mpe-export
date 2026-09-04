@@ -160,7 +160,7 @@ async function main() {
     if (args.json || args.quiet) return;
     if (!args.preset) {
       console.error(
-        '💡 提示: 本次使用默认简洁样式。排版预设可选: claude（亮色主题风）/ claude-dark（暗色）/ phycat（讲义 A4）/ phycat-cherry 等 11 个 Phycat 主题配色变体（8 亮 3 暗），详情: mpe-export --preset list',
+        '💡 提示: 本次使用默认简洁样式。排版预设可选: claude（亮色主题风）/ claude-dark（暗色）/ onepage（Obsidian OnePage 暖白纸张）/ onepage-dark（暖棕·冷锚）/ phycat（讲义 A4）/ phycat-cherry 等 11 个 Phycat 主题配色变体（8 亮 3 暗），详情: mpe-export --preset list',
       );
     }
     const usedPagination =
@@ -243,7 +243,7 @@ async function main() {
     // 机器可读的后续建议：agent 解析结果时能看到，可主动告知用户还能换风格
     if (!anyFailed && !args.preset) {
       out.hint =
-        '本次使用默认简洁样式（未指定预设）。可选排版预设: claude（亮色主题风）/ claude-dark（暗色）/ phycat（讲义 A4）/ phycat-cherry 等 11 个 Phycat 主题配色变体（8 亮 3 暗，霞鹜文楷正文）；详情: mpe-export --preset list。若用户在意样式，建议下次询问偏好后加 --preset <name> 重导。';
+        '本次使用默认简洁样式（未指定预设）。可选排版预设: claude（亮色主题风）/ claude-dark（暗色）/ onepage（Obsidian OnePage 暖白纸张）/ onepage-dark（暖棕·冷锚）/ phycat（讲义 A4）/ phycat-cherry 等 11 个 Phycat 主题配色变体（8 亮 3 暗，霞鹜文楷正文）；详情: mpe-export --preset list。若用户在意样式，建议下次询问偏好后加 --preset <name> 重导。';
     }
     // PDF 且未用任何分页开关时，提示分页能力存在（agent 可按用户意图追加）
     const usedPagination =

@@ -38,6 +38,7 @@ mpe-export <file.md> [<file2.md> ...] [选项]
       --preset <name>      内置排版预设（--preset list 查看全部）
                            phycat: 讲义/试题 A4 排版（源自 scan-pdf-to-print-html 技能规格）
                            claude / claude-dark: Claude 主题风格（Typora claude-theme v19.7 提炼）
+                           onepage / onepage-dark: Obsidian OnePage 主题（暖白纸张 / 暖棕·冷锚）
       --bg-pattern         保留 phycat 预设的背景图案层（网格/圆点；默认剥离，打印更干净）
       --footer             PDF 启用独立页脚（见下文「自动分页与独立页脚」；与预设正交）
       --pagination         PDF 只启用 sheet 自动分页（不加页脚；与预设正交）
@@ -250,6 +251,36 @@ mpe-export 笔记.md --format html --preset claude-dark   # 暗色 HTML
 > 中文字体子集化失败（如 `subset-font` 依赖缺失）时静默降级为系统字体回退。
 > 重新生成样式：`node tools/build-claude-preset.js <主题目录> claude.css lib/presets/claude.css`。
 
+### `onepage` / `onepage-dark` —— Obsidian OnePage 主题（亮/暗）
+
+提炼自 Obsidian 主题 **OnePage v1.0.5**（`ivaneye/OnePage`，基于 Cupertino 深度定制，
+MIT License；`tools/build-onepage-preset.js` 从其 `theme.css` 的 `body.theme-light`
+暖白纸张 / `body.theme-dark` 暖棕·冷锚 配色块自动蒸馏生成，只保留文档阅读样式，
+丢弃 Obsidian 界面样式）：
+
+| 规格 | 值 |
+|------|-----|
+| 背景 | 亮色 `#faf7f1`（暖白纸张）/ 暗色 `#262322`（暖棕·冷锚），`@page` 满版铺底 |
+| 正文 | 16px / 行高 1.7 / 阅读宽 760px 居中（Obsidian 阅读视图规格），正文深暖棕 `#3d3730`（亮）/ 米色 `#cfc7bd`（暗） |
+| 强调色 | 亮色深青 `#0e6e63` / 暗色冷青绿 `#6db3a3`（链接、下划线、行内代码、任务框、选中） |
+| 标题 | 彩色排版 `--typo-h1..h6`：h1 皇家蓝 / h2 深紫 / h3 深青绿 / h4 陶土红 / h5 赭黄 / h6 灰，h1-h4 负字距，h1-h3 变字重（650/620/580） |
+| 加粗/斜体 | 加粗橙 `#C2410C`（亮）/`#E89A60`（暗），斜体鼠尾草绿 `#4A704F`（亮）/`#A6BA9D`（暗） |
+| 代码 | JetBrains Mono 连字（未装则回退 SF Mono/Menlo/Consolas），代码块圆角边框，行内代码圆角药丸；prism token 色映射主题 `--code-*` 配色 |
+| Callout | macOS 胶囊卡片：`--color-*-rgb` 主题强调色 + 浅色混底（note/info/tip/important/warning/caution/success/question 等） |
+| 引用块 | 2px 暖灰左边线 + 浅底 + 右缘圆角，正文弱化为 `--text-muted` |
+| 表格 | 强调色表头（底部 2px 强调线）+ 细格线 + 隔行浅底 |
+| 中文字体 | Noto Sans SC 按文档字符动态子集化内联（见 claude 预设说明） |
+
+```bash
+mpe-export 笔记.md --format both --preset onepage        # 亮色 · 暖白纸张 HTML + PDF
+mpe-export 笔记.md --format html --preset onepage-dark   # 暗色 · 暖棕·冷锚 HTML
+```
+
+> 说明：纯"风格预设"——不做标题分页、不注入页脚面包屑；PDF 默认
+> A4 + 18mm/18mm/14mm 页边距，可用 `--pdf-json` 覆盖。暗色预设默认搭配
+> monokai 代码高亮 + mermaid dark 主题（可用 `--config` / `--code-theme` 覆盖）。
+> 重新生成样式：`node tools/build-onepage-preset.js <主题目录>/theme.css lib/presets`。
+
 ### `phycat-*` —— Phycat 主题配色变体（11 个，Typora typora-theme-phycat）
 
 提炼自 Typora 主题 **typora-theme-phycat**（`tools/build-phycat-preset.js` 从
@@ -335,7 +366,7 @@ html:
 
 风格选择（用户只说"打印/导出"、没指定样式时）:
   1. mpe-export --preset list     # JSON 列出全部预设（含 description/usage）及 lastUsed（上次预设）
-  2. 主动向用户确认风格偏好:      claude（亮色主题风）/ claude-dark（暗色）/ phycat（讲义 A4）/ 默认简洁
+  2. 主动向用户确认风格偏好:      claude（亮色主题风）/ claude-dark（暗色）/ onepage（暖白纸张）/ onepage-dark（暖棕暗色）/ phycat（讲义 A4）/ 默认简洁
      有 lastUsed 时把它作为推荐默认值，问用户是否沿用
   3. 带上 --preset <name> 导出；沿用上次可直接 --preset last
      用户对结果不满意时，按预设文档调整参数重导
