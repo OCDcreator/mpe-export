@@ -214,6 +214,14 @@ check('分页器逐项拆分嵌套列表并防止孤儿标题', () => {
   });
 });
 
+check('顶层表格按行流式跨页（续页重复表头）', () => {
+  execFileSync(process.execPath, [path.join(__dirname, 'pagination-table.js')], {
+    encoding: 'utf8',
+    cwd: tmp,
+    stdio: 'pipe',
+  });
+});
+
 check('callout 选项表的表头与内容样式一致', () => {
   execFileSync(process.execPath, [path.join(__dirname, 'callout-table.js')], {
     encoding: 'utf8',
