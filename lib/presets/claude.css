@@ -49,7 +49,7 @@ html {
 
 html,
 :host {
-    line-height: 1.75;
+    line-height: 1.5;
     tab-size: 4;
 }
 
@@ -222,7 +222,7 @@ body {
     font-size: 1.5rem;
     line-height: 1.3;
     font-weight: var(--font-strong);
-    margin: 1.2rem 0 0.45rem 0;
+    margin: 0.75rem 0 -0.25rem 0;
     padding: 0 2rem 0 0.5rem;
 }
 
@@ -230,7 +230,7 @@ body {
     font-size: 1.25rem;
     line-height: 1.35;
     font-weight: var(--font-strong);
-    margin: 1.5rem 0 0.5rem 0;
+    margin: 0.75rem 0 -0.25rem 0;
     padding: 0 2rem 0 0.5rem;
 }
 
@@ -238,7 +238,7 @@ body {
     font-size: 1.15rem;
     line-height: 1.4;
     font-weight: var(--font-strong);
-    margin: 1.15rem 0 0.4rem 0;
+    margin: 0.5rem 0 -0.25rem 0;
     padding: 0 2rem 0 0.5rem;
 }
 
@@ -246,7 +246,7 @@ body {
     font-size: 1rem;
     line-height: 1.5;
     font-weight: var(--font-strong);
-    margin: 0.95rem 0 0.3rem 0;
+    margin: 0.5rem 0 -0.25rem 0;
     padding: 0 2rem 0 0.5rem;
 }
 
@@ -255,13 +255,13 @@ body {
     font-size: 0.9rem;
     line-height: 1.5;
     font-weight: 600;
-    margin: 0.85rem 0 0.3rem 0;
+    margin: 0.5rem 0 -0.25rem 0;
     padding: 0 2rem 0 0.5rem;
 }
 
 .markdown-preview p {
     padding: 0 2rem 0 0.5rem;
-    margin: 0 0 0.55rem 0;
+    margin: 0;
 }
 
 .markdown-preview strong {
@@ -277,8 +277,8 @@ span[md-inline="underline"] u {
 .markdown-preview ol {
     display: flex;
     flex-direction: column;
-    gap: 0.42rem;
-    line-height: 1.75;
+    gap: 0.25rem;
+    line-height: 1.65rem;
 }
 
 .markdown-preview li {
@@ -288,13 +288,12 @@ span[md-inline="underline"] u {
 
 .markdown-preview li>p {
     padding: 0;
-    margin: 0;
 }
 
 .markdown-preview>ul,
 .markdown-preview>ol {
     padding: 0 2rem;
-    margin: 0 0 1rem 0;
+    margin: 0 0 0.75rem 0;
 }
 
 .markdown-preview>ul ul,
@@ -368,18 +367,18 @@ span[md-inline="underline"] u {
 .markdown-preview table {
     border: none;
     width: 100%;
-    line-height: 1.75;
+    line-height: 1.65rem;
 }
 
 .markdown-preview th,
 .markdown-preview td {
     font-size: 0.875rem;
-    line-height: 1.8;
+    line-height: 1.7;
     border-left: none;
     border-right: none;
     border-top: none;
     border-bottom: none;
-    padding: 0.62rem 1rem 0.62rem 0.6rem !important;
+    padding: 0.5rem 1rem 0.5rem 1px !important;
     
     height: 1px;
 }
@@ -570,8 +569,8 @@ p+blockquote+blockquote+blockquote {
 
 .markdown-preview .callout p {
     padding: 0;
-    margin: 0.4rem 0 0 0;
-    line-height: 1.75;
+    margin: 0.35rem 0 0 0;
+    line-height: 1.65;
 }
 
 .markdown-preview .callout p:first-child {
@@ -773,6 +772,15 @@ figure,
 /* crossnote 预览容器：居中（原 #write 规则已带 max-width: 752px） */
 .markdown-preview { margin: 0 auto; }
 
+/* Chrome 原生打印分页（不加 --footer 时）会把 li 从内部切成两页
+   （fragmentainer 切片），跨页 li 的 ::marker 在续页重复绘制、续页首行
+   缩进丢失——含行内公式的长条目看起来像被搬到条末（串行 bug），claude
+   预设同样复现。实测 @media print 块里的等价规则对原生导出路径不生效，
+   必须提到顶层（见 build-phycat-preset.js 同款修复与验证记录）。
+   JS 分页器（footer.js）本来就按 li 整块搬运，不受本规则影响。
+   超长单 li（高于整页）仍会被迫分片，但内容不丢、不再静默切碎。 */
+.markdown-preview li { break-inside: avoid; page-break-inside: avoid; }
+
 /* 代码块：原 .md-fences 顶部 2.8rem 是给 Typora 语言标签留的，导出无此标签 */
 .markdown-preview pre {
     position: relative;
@@ -819,6 +827,49 @@ html { font-size: 14px; }
     .markdown-preview > h1:first-child { margin-top: 0; }
 }
 
+
+/* ============ 行距与留白放宽（仅亮色；归档自 242fc13 手改） ============ */
+
+html,
+:host {
+    line-height: 1.75;
+}
+
+.markdown-preview h1 { margin: 1.2rem 0 0.45rem 0; }
+.markdown-preview h2 { margin: 1.5rem 0 0.5rem 0; }
+.markdown-preview h3 { margin: 1.15rem 0 0.4rem 0; }
+.markdown-preview h4 { margin: 0.95rem 0 0.3rem 0; }
+.markdown-preview h5 { margin: 0.85rem 0 0.3rem 0; }
+
+.markdown-preview p { margin: 0 0 0.55rem 0; }
+
+.markdown-preview ul,
+.markdown-preview ol {
+    gap: 0.42rem;
+    line-height: 1.75;
+}
+
+.markdown-preview li { margin: 0; }
+
+.markdown-preview>ul,
+.markdown-preview>ol {
+    margin: 0 0 1rem 0;
+}
+
+.markdown-preview table {
+    line-height: 1.75;
+}
+
+.markdown-preview th,
+.markdown-preview td {
+    line-height: 1.8;
+    padding: 0.62rem 1rem 0.62rem 0.6rem !important;
+}
+
+.markdown-preview .callout p {
+    margin: 0.4rem 0 0 0;
+    line-height: 1.75;
+}
 
 /* callout 标题布局：抵消 crossnote 默认样式的负边距/图标留白，套用主题排版 */
 .markdown-preview .callout > .callout-title {

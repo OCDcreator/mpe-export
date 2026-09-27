@@ -192,6 +192,55 @@ html { font-size: 14px; }
 }
 `;
 
+/* 2026-09-27 归档：commit 242fc13 曾手改 claude.css 放宽标题/正文/表格行距
+   （当时未同步进本脚本，重建即丢）。现把这些微调收编为本脚本唯一事实源，
+   仅对亮色 claude.css 生效（claude-dark.css 从未带过这些微调，保持原样）。
+   追加在选择器同特异度、位置靠后，覆盖上游主题原始值。 */
+const SPACING_TWEAKS_LIGHT = `
+/* ============ 行距与留白放宽（仅亮色；归档自 242fc13 手改） ============ */
+
+html,
+:host {
+    line-height: 1.75;
+}
+
+.markdown-preview h1 { margin: 1.2rem 0 0.45rem 0; }
+.markdown-preview h2 { margin: 1.5rem 0 0.5rem 0; }
+.markdown-preview h3 { margin: 1.15rem 0 0.4rem 0; }
+.markdown-preview h4 { margin: 0.95rem 0 0.3rem 0; }
+.markdown-preview h5 { margin: 0.85rem 0 0.3rem 0; }
+
+.markdown-preview p { margin: 0 0 0.55rem 0; }
+
+.markdown-preview ul,
+.markdown-preview ol {
+    gap: 0.42rem;
+    line-height: 1.75;
+}
+
+.markdown-preview li { margin: 0; }
+
+.markdown-preview>ul,
+.markdown-preview>ol {
+    margin: 0 0 1rem 0;
+}
+
+.markdown-preview table {
+    line-height: 1.75;
+}
+
+.markdown-preview th,
+.markdown-preview td {
+    line-height: 1.8;
+    padding: 0.62rem 1rem 0.62rem 0.6rem !important;
+}
+
+.markdown-preview .callout p {
+    margin: 0.4rem 0 0 0;
+    line-height: 1.75;
+}
+`;
+
 const COMPAT_EXTRA = `
 /* callout 标题布局：抵消 crossnote 默认样式的负边距/图标留白，套用主题排版 */
 .markdown-preview .callout > .callout-title {
@@ -209,6 +258,15 @@ const COMPAT = `
 
 /* crossnote 预览容器：居中（原 #write 规则已带 max-width: 752px） */
 .markdown-preview { margin: 0 auto; }
+
+/* Chrome 原生打印分页（不加 --footer 时）会把 li 从内部切成两页
+   （fragmentainer 切片），跨页 li 的 ::marker 在续页重复绘制、续页首行
+   缩进丢失——含行内公式的长条目看起来像被搬到条末（串行 bug），claude
+   预设同样复现。实测 @media print 块里的等价规则对原生导出路径不生效，
+   必须提到顶层（见 build-phycat-preset.js 同款修复与验证记录）。
+   JS 分页器（footer.js）本来就按 li 整块搬运，不受本规则影响。
+   超长单 li（高于整页）仍会被迫分片，但内容不丢、不再静默切碎。 */
+.markdown-preview li { break-inside: avoid; page-break-inside: avoid; }
 
 /* 代码块：原 .md-fences 顶部 2.8rem 是给 Typora 语言标签留的，导出无此标签 */
 .markdown-preview pre {
@@ -252,6 +310,7 @@ fs.writeFileSync(
     '\n' +
     TYPOGRAPHY_FIX +
     '\n' +
+    (inputName === 'claude.css' ? SPACING_TWEAKS_LIGHT : '') +
     COMPAT_EXTRA,
   'utf8',
 );

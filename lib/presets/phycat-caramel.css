@@ -1162,6 +1162,19 @@ p {
    贯穿整页的线条，直接去掉（主题 @media print 里也是这么处理的） */
 .markdown-preview li:before { content: none; }
 
+/* Chrome 原生打印分页（不加 --footer 时）会把 li 从内部切成两页
+   （fragmentainer 切片），且跨页 li 的 ::marker 在续页重复绘制、
+   续页首行缩进丢失——含行内公式的长条目看起来像被搬到条末（串行 bug）。
+   实测：同样含 dfrac 的长任务条目，加 --footer（JS 分页器整 li 搬运）
+   正常、不加 --footer（Chrome 原生分页）必串行；且与 - [ ] / - 无关。
+   修法：li 禁止从内部切断（整条目要么整块留本页、要么整体移下页，
+   与 callout/图片同一待遇）。JS 分页器（footer.js）本来就按 li 整块
+   搬运，不受本规则影响。超长单 li 仍可溢出（兜底），但不再静默切碎。
+   注意：HAS 布局下 break-inside:avoid 会连带其块级祖先 li 一起避免
+   中断。主题的 @media print 已有 li{break-inside:avoid}，这里把选择器
+   提到顶层使两条 PDF 路径（原生 + JS 分页）都生效。 */
+.markdown-preview li { break-inside: avoid; page-break-inside: avoid; }
+
 /* 代码块：主题里代码样式挂在 CodeMirror 上（已丢弃），这里补给导出用 pre */
 .markdown-preview pre {
     font-family: CascadiaCode, "Lucida Console", Consolas, Courier, monospace;

@@ -786,6 +786,15 @@ figure,
 /* crossnote 预览容器：居中（原 #write 规则已带 max-width: 752px） */
 .markdown-preview { margin: 0 auto; }
 
+/* Chrome 原生打印分页（不加 --footer 时）会把 li 从内部切成两页
+   （fragmentainer 切片），跨页 li 的 ::marker 在续页重复绘制、续页首行
+   缩进丢失——含行内公式的长条目看起来像被搬到条末（串行 bug），claude
+   预设同样复现。实测 @media print 块里的等价规则对原生导出路径不生效，
+   必须提到顶层（见 build-phycat-preset.js 同款修复与验证记录）。
+   JS 分页器（footer.js）本来就按 li 整块搬运，不受本规则影响。
+   超长单 li（高于整页）仍会被迫分片，但内容不丢、不再静默切碎。 */
+.markdown-preview li { break-inside: avoid; page-break-inside: avoid; }
+
 /* 代码块：原 .md-fences 顶部 2.8rem 是给 Typora 语言标签留的，导出无此标签 */
 .markdown-preview pre {
     position: relative;
