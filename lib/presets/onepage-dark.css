@@ -237,3 +237,11 @@
     .markdown-preview pre,
     .markdown-preview .callout { break-inside: avoid; page-break-inside: avoid; }
 }
+
+/* Chrome 原生打印分页（不加 --footer 时）会把 li 从内部切成两页（fragmentainer
+   切片），跨页 li 的 ::marker 在续页重复绘制、续页首行缩进丢失——含行内公式的
+   长条目看起来像被搬到条末（串行 bug）。上方 @media print 块对原生导出路径
+   不生效，必须提到顶层（同 build-phycat/build-claude-preset.js 的修复与验证）。
+   JS 分页器（footer.js）本来就按 li 整块搬运，不受本规则影响。
+   超长单 li（高于整页）仍会被迫分片，但内容不丢、不再静默切碎。 */
+.markdown-preview li { break-inside: avoid; page-break-inside: avoid; }
