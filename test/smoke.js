@@ -51,6 +51,16 @@ check('parseArgs 识别 --toc / --toc-level / --toc-title / --cover', () => {
   if (a.cover !== 'concept-map.html') throw new Error('cover=' + a.cover);
 });
 
+check('parseArgs 识别 --no-pagination（默认关闭即启用 sheet 分页）', () => {
+  const { parseArgs } = require('../lib/args');
+  const plain = parseArgs(['a.md']);
+  if (plain.noPagination !== false) {
+    throw new Error('默认 noPagination 应为 false（sheet 分页默认开启）');
+  }
+  const opted = parseArgs(['a.md', '--no-pagination']);
+  if (opted.noPagination !== true) throw new Error('--no-pagination 应置 noPagination=true');
+});
+
 check('rewriteWavyUnderlines 生成固定波长的行内 SVG 波浪', () => {
   const { rewriteWavyUnderlines, WAVY_UNDERLINE_CSS } = require('../lib/exporter');
   if (!WAVY_UNDERLINE_CSS.includes('.wavy')) throw new Error('缺少 .wavy CSS');

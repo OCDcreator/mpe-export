@@ -41,11 +41,13 @@ mpe-export <file.md> [<file2.md> ...] [选项]
                            onepage / onepage-dark: Obsidian OnePage 主题（暖白纸张 / 暖棕·冷锚）
       --bg-pattern         保留 phycat 预设的背景图案层（网格/圆点；默认剥离，打印更干净）
       --footer             PDF 启用独立页脚（见下文「自动分页与独立页脚」；与预设正交）
-      --pagination         PDF 只启用 sheet 自动分页（不加页脚；与预设正交）
       --pagination-level <h1|h2|h3>
-                           标题换页（蕴含 --pagination）：父章节内第一个该级
-                           标题不换页，其余该级标题各自起新页
-      --toc                PDF 在正文前插入目录页（蕴含 --pagination；
+                           标题换页（sheet 自动分页已默认开启）：父章节内第一个
+                           该级标题不换页，其余该级标题各自起新页
+      --no-pagination      PDF 退回 Chrome 原生分页（默认已是 sheet 自动分页：
+                           整块不断页/表格按行流式/续页重复表头；
+                           front-matter pagination: false 等价）
+      --toc                PDF 在正文前插入目录页（蕴含分页；
                            带真实页码；条目过多自动续页）
       --toc-level <h1|h2|h3>
                            目录收录级别（默认 h3；单独使用即蕴含 --toc）
@@ -79,12 +81,15 @@ mpe-export <file.md> [<file2.md> ...] [选项]
 
 ## 自动分页、页脚与目录页（--pagination / --footer / --toc，仅 PDF）
 
-**`--pagination`**（或 front-matter `pagination: true`）：PDF 不走 Chrome 原生
-分页，改在浏览器内按块自动分页（移植并通用化 scan 技能
-postprocess_handout_for_contract.py 的机制）——代码块 / 图片 / 引用块 / callout
+**sheet 自动分页（默认开启）**：PDF 默认不走 Chrome 原生分页，改在浏览器内
+按块自动分页（移植并通用化 scan 技能 postprocess_handout_for_contract.py 的
+机制）——代码块 / 图片 / 引用块 / callout
 能放进一页就**绝不从中间切断**；表格则与列表、段落一样**按行流式跨页**（半页
 空白会先用表格前几行填满，续页自动重复表头，rowspan 跨切点自动续接），只有
 连一行都放不下时才整体移到下一页。与样式预设正交，任意预设可叠加。
+要退回 Chrome 原生分页：`--no-pagination`（或 front-matter `pagination: false`）——
+原生路径代码块/引用块可能被换页切断，仅建议明确需要 Chrome 分片行为时使用；
+`--pagination` 旗标仍被接受，等价于默认行为。
 
 **`--footer`**（或 front-matter `footer: true`）：在分页之上叠加 scan 风格页脚
 （蕴含分页，无需再加 `--pagination`）：9px 灰字、顶部 1px 分隔线、左侧章节
@@ -125,7 +130,7 @@ KaTeX 节点：标题含公式时页脚照常显示分式/上下标，并随页�
 8.（仅 --footer）扫描每页标题（h1–h4）生成面包屑——页脚天然知道当前页章节位置。
 
 ```bash
-mpe-export 笔记.md -f pdf --preset phycat-sakura --pagination  # 主题风格 + 整块不断页
+mpe-export 笔记.md -f pdf --preset phycat-sakura               # 主题风格（自动分页已默认）
 mpe-export 讲义.md -f pdf --preset phycat --footer   # 讲义排版 + 分页 + scan 风格页脚
 mpe-export 笔记.md -f pdf --preset claude --footer   # claude 主题 + 同一页脚
 mpe-export 讲义.md -f pdf --preset phycat --pagination-level h3  # 每节起新页（节内首个小节跟随）

@@ -163,16 +163,10 @@ async function main() {
         '💡 提示: 本次使用默认简洁样式。排版预设可选: claude（亮色主题风）/ claude-dark（暗色）/ onepage（Obsidian OnePage 暖白纸张）/ onepage-dark（暖棕·冷锚）/ phycat（讲义 A4）/ phycat-cherry 等 11 个 Phycat 主题配色变体（8 亮 3 暗），详情: mpe-export --preset list',
       );
     }
-    const usedPagination =
-      args.pagination ||
-      args.footer ||
-      args.paginationLevel ||
-      args.toc ||
-      args.tocLevel ||
-      args.cover;
-    if ((args.format === 'pdf' || args.format === 'both') && !usedPagination) {
+    // sheet 自动分页已默认开启；只有明确退回原生分页时才提示风险
+    if ((args.format === 'pdf' || args.format === 'both') && args.noPagination) {
       console.error(
-        '💡 提示: 本次 PDF 为原生分页（代码块/引用块可能被切断）。可选: --pagination 整块不断页 / --pagination-level h2|h3 章节换页 / --footer 页脚+页码 / --toc 目录页',
+        '💡 提示: 已按 --no-pagination 退回 Chrome 原生分页（代码块/引用块可能被换页切断）。去掉该旗标（或 front-matter pagination: false）即恢复默认的整块不断页自动分页',
       );
     }
   };
@@ -198,6 +192,7 @@ async function main() {
         footerLabel: args.footerLabel,
         footer: args.footer,
         pagination: args.pagination,
+        noPagination: args.noPagination,
         paginationLevel: args.paginationLevel,
         toc: args.toc,
         tocLevel: args.tocLevel,
@@ -245,17 +240,10 @@ async function main() {
       out.hint =
         '本次使用默认简洁样式（未指定预设）。可选排版预设: claude（亮色主题风）/ claude-dark（暗色）/ onepage（Obsidian OnePage 暖白纸张）/ onepage-dark（暖棕·冷锚）/ phycat（讲义 A4）/ phycat-cherry 等 11 个 Phycat 主题配色变体（8 亮 3 暗，霞鹜文楷正文）；详情: mpe-export --preset list。若用户在意样式，建议下次询问偏好后加 --preset <name> 重导。';
     }
-    // PDF 且未用任何分页开关时，提示分页能力存在（agent 可按用户意图追加）
-    const usedPagination =
-      args.pagination ||
-      args.footer ||
-      args.paginationLevel ||
-      args.toc ||
-      args.tocLevel ||
-      args.cover;
-    if (!anyFailed && (args.format === 'pdf' || args.format === 'both') && !usedPagination) {
+    // sheet 自动分页已默认开启；只有明确退回原生分页时才告知风险与恢复方式
+    if (!anyFailed && (args.format === 'pdf' || args.format === 'both') && args.noPagination) {
       out.paginationHint =
-        '本次 PDF 为 Chrome 原生分页（代码块/引用块可能被换页切断）。可选: --pagination（整块不断页）/ --pagination-level h2|h3（章节标题换页，父章节内第一个不换页）/ --footer（页脚+页码+章节面包屑，蕴含分页）/ --toc（正文前插入带真实页码的目录页，蕴含分页）。用户若抱怨切断、要章节换页、要页码或要目录页，追加对应开关重导即可。';
+        '本次 PDF 已按 --no-pagination 退回 Chrome 原生分页（代码块/引用块可能被换页切断）。去掉该旗标（或 front-matter pagination: false）即恢复默认的整块不断页自动分页；需要页码再加 --footer，需要目录页再加 --toc。';
     }
     process.stdout.write(JSON.stringify(out, null, 2) + '\n');
   } else {
