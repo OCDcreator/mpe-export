@@ -32,7 +32,8 @@ mpe-export <file.md> [<file2.md> ...] [选项]
 
 选项:
   -f, --format <type>      pdf | html | png | jpeg | both (默认 both)
-  -o, --out <dir>          输出目录 (默认: 源文件所在目录)
+  -o, --out <dir>          输出目录 (默认: Write\pdf-exports\，按来源分夹
+                           custom / <学科>-custom / misc)
       --out-name <name>    输出文件名 (不含扩展名)
       --offline            HTML 导出为离线单文件（资源内联）
       --preset <name>      内置排版预设（--preset list 查看全部）
@@ -386,7 +387,9 @@ html:
   - 失败时: --json 模式下 stdout 输出 {"ok":false,"tool":"mpe-export","error":"<原因>"}。
   - stdout 纯净: --json 模式下所有进度日志都写到 stderr，stdout 只有 JSON。
   - 不修改源文件: 参数注入通过同目录临时副本实现，导出后自动清理。
-  - 输出位置: 默认与源文件同目录同名；可用 --out 指定目录、--out-name 改名。
+  - 输出位置: 默认落到 Obsidian 库外 Write\pdf-exports\（按来源分夹: math\custom → custom\、
+    math\<学科>\custom → <学科>-custom\、其余 → misc\；2026-10-05 起，避免 Obsidian 为大 PDF
+    建全文索引拖慢启动）。可用 --out 指定目录、--out-name 改名；MPE_EXPORT_OUT_ROOT 换根。
   - PDF 依赖本机 Chrome/Edge（自动探测）; 若失败请用 --chrome-path 显式指定浏览器路径。
   - 文件路径: 绝对路径最稳；相对路径相对调用时的当前工作目录解析。
   - 首次调用较慢(1-3s): 引擎需加载 crossnote 及其依赖，属正常现象。

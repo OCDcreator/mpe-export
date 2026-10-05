@@ -310,8 +310,41 @@ check('--pdf-json 参数注入', () => {
 check('批量多文件导出', () => {
   const b = path.join(tmp, 'batch-b.md');
   fs.writeFileSync(b, '# Batch B\n\nhello');
-  const out = run([EXAMPLE, b, '--format', 'html']);
+  const out = run([EXAMPLE, b, '--format', 'html', '--out', tmp]);
   if (!out.includes('batch-b.html')) throw new Error(out);
+});
+
+check('默认输出目录按来源路由到库外 pdf-exports', () => {
+  const fakeCustom = path.join(tmp, 'math', 'custom');
+  fs.mkdirSync(fakeCustom, { recursive: true });
+  const md = path.join(fakeCustom, 'route-demo.md');
+  fs.writeFileSync(md, '# Route\n\nhello');
+  const exportsRoot = path.join(tmp, 'pdf-exports');
+  const out = execFileSync(
+    process.execPath,
+    [BIN, md, '--format', 'html', '--json'],
+    { encoding: 'utf8', cwd: tmp, env: { ...process.env, MPE_EXPORT_OUT_ROOT: exportsRoot } },
+  );
+  const data = JSON.parse(out);
+  if (!data.ok) throw new Error(JSON.stringify(data));
+  const dest = data.files[0].outputs.html;
+  const expect = path.join(exportsRoot, 'custom', 'route-demo.html');
+  if (dest !== expect) throw new Error(`路由结果 ${dest} !== ${expect}`);
+  if (!fs.existsSync(expect)) throw new Error('目标文件不存在: ' + expect);
+  // 学科分夹路由: math\<学科>\custom → <学科>-custom
+  const subjCustom = path.join(tmp, 'math', '初中数学', 'custom');
+  fs.mkdirSync(subjCustom, { recursive: true });
+  const md2 = path.join(subjCustom, 'route-demo2.md');
+  fs.writeFileSync(md2, '# Route2\n\nhello');
+  const out2 = execFileSync(
+    process.execPath,
+    [BIN, md2, '--format', 'html', '--json'],
+    { encoding: 'utf8', cwd: tmp, env: { ...process.env, MPE_EXPORT_OUT_ROOT: exportsRoot } },
+  );
+  const dest2 = JSON.parse(out2).files[0].outputs.html;
+  const expect2 = path.join(exportsRoot, '初中数学-custom', 'route-demo2.html');
+  if (dest2 !== expect2) throw new Error(`学科分夹路由 ${dest2} !== ${expect2}`);
+  if (!fs.existsSync(expect2)) throw new Error('目标文件不存在: ' + expect2);
 });
 
 check('文件不存在 → 非零退出码', () => {
