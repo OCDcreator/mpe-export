@@ -1252,6 +1252,17 @@ html { font-size: 14px; }
 }
 
 
+/* ============ 标题颜色变量化（生成脚本追加，供 --theme-vars 覆盖） ============ */
+/* fallback 与追加前的计算值一致（亮: h1 #222 / h2 --head-title-h2-color / h3-h6 继承；
+   暗: 全部 --text-color）。覆盖入口见 README「phycat-*」节。 */
+.markdown-preview h1 { color: var(--h1-color, var(--text-color)); }
+.markdown-preview h2 { color: var(--h2-color, var(--text-color)); }
+.markdown-preview h3 { color: var(--h3-color, var(--text-color)); }
+.markdown-preview h4 { color: var(--h4-color, var(--text-color)); }
+.markdown-preview h5 { color: var(--h5-color, var(--text-color)); }
+.markdown-preview h6 { color: var(--h6-color, var(--text-color)); }
+
+
 /* callout 标题布局：抵消 crossnote 默认样式的负边距/图标留白，套用主题胶囊排版。
    胶囊减重（小一号字号/紧凑 padding/去掉下外边距），避免"头重脚轻" */
 .markdown-preview .callout > .callout-title {
@@ -1269,4 +1280,243 @@ html { font-size: 14px; }
 }
 .markdown-preview .callout > p:last-child {
     margin-block-end: 0.35rem;
+}
+
+
+/* ============ 图片对齐语法（同步自 obsidian-theme-phycat 0.3.x） ============ */
+/* 用法：![center](img.png) / ![right](img.png) / ![banner](img.png)，
+   缩写 +C / +R / +L 同义；alt 含关键词即触发（与主题一致，子串匹配）。
+   不带关键词的图片维持 crossnote 独立图片默认居中，不受影响 */
+.markdown-preview p>img[alt*="right" i],
+.markdown-preview p>img[alt*="+R" i],
+.markdown-preview p>img[alt*="left" i],
+.markdown-preview p>img[alt*="+L" i],
+.markdown-preview p>img[alt*="center" i],
+.markdown-preview p>img[alt*="+C" i],
+.markdown-preview p>img[alt*="banner" i] {
+    display: block;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+.markdown-preview p>img[alt*="right" i],
+.markdown-preview p>img[alt*="+R" i] {
+    margin-left: auto !important;
+    margin-right: 0 !important;
+}
+.markdown-preview p>img[alt*="left" i],
+.markdown-preview p>img[alt*="+L" i] {
+    margin-left: 0 !important;
+    margin-right: auto !important;
+}
+.markdown-preview p>img[alt*="center" i],
+.markdown-preview p>img[alt*="+C" i] {
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+.markdown-preview p>img[alt*="banner" i] {
+    width: 100% !important;
+    max-height: 250px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+
+/* ============ mermaid 图表主题色（同步自 obsidian-theme-phycat） ============ */
+.markdown-preview .mermaid {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: 1em 0;
+    padding-bottom: 8px;
+    text-align: center;
+    background-color: transparent !important;
+}
+.markdown-preview .mermaid .node rect,
+.markdown-preview .mermaid .node circle,
+.markdown-preview .mermaid .node ellipse,
+.markdown-preview .mermaid .node path {
+    fill: color-mix(in srgb, var(--element-color, var(--primary-color)), transparent 90%) !important;
+    stroke: var(--element-color, var(--primary-color)) !important;
+    stroke-width: 1.5px !important;
+    opacity: 1 !important;
+}
+.markdown-preview .mermaid .node polygon {
+    fill: color-mix(in srgb, var(--secondary-color, var(--element-color, var(--primary-color))), transparent 85%) !important;
+    stroke: var(--secondary-color, var(--element-color, var(--primary-color))) !important;
+    stroke-width: 1.5px !important;
+}
+.markdown-preview .mermaid .label,
+.markdown-preview .mermaid foreignObject,
+.markdown-preview .mermaid foreignObject div,
+.markdown-preview .mermaid foreignObject span,
+.markdown-preview .mermaid foreignObject p,
+.markdown-preview .mermaid span.nodeLabel {
+    font-size: 12px !important;
+}
+.markdown-preview .edgeLabel p,
+.markdown-preview .edgeLabel span,
+.markdown-preview .edgeLabel foreignObject {
+    background-color: color-mix(in srgb, var(--element-color, var(--primary-color)), white 90%) !important;
+    color: #1c1719 !important;
+}
+.markdown-preview .edgeLabel p {
+    border: 1px solid var(--element-color, var(--primary-color)) !important;
+    border-radius: 4px !important;
+    letter-spacing: 0 !important;
+    padding: 0 3px;
+}
+.markdown-preview .cluster rect {
+    fill: color-mix(in srgb, var(--secondary-color, var(--element-color, var(--primary-color))), transparent 90%) !important;
+    stroke: var(--secondary-color, var(--element-color, var(--primary-color))) !important;
+    stroke-width: 1px !important;
+    stroke-linejoin: round;
+}
+.markdown-preview .statediagram-cluster rect {
+    fill: color-mix(in srgb, var(--element-color, var(--primary-color)), white 90%) !important;
+    stroke: var(--element-color, var(--primary-color)) !important;
+}
+.markdown-preview .mermaid * {
+    letter-spacing: 0;
+}
+.markdown-preview .mermaid foreignObject {
+    overflow: visible !important;
+}
+.markdown-preview .mermaid .node .label,
+.markdown-preview .mermaid .label {
+    stroke: none !important;
+}
+
+/* ============ 代码高亮调色板（obsidian-theme-phycat 0.3.5，phycat-radiation） ============ */
+:root {
+    --code-block-bg: #1b1d1b;
+    --code-normal: rgb(230, 230, 230);
+    --code-keyword: rgb(255, 203, 107);
+    --code-function: rgb(76, 217, 100);
+    --code-string: rgb(195, 232, 141);
+    --code-comment: #7e929b;
+    --code-property: rgb(76, 217, 100);
+    --code-value: rgb(247, 140, 108);
+    --code-punctuation: rgb(230, 230, 230);
+    --code-tag: rgb(255, 83, 112);
+    --code-operator: rgb(137, 221, 255);
+    --code-important: rgb(255, 203, 107);
+}
+
+/* ============ 代码高亮令牌映射（消费上方 --code-* 调色板） ============ */
+.markdown-preview pre {
+    background-color: var(--code-block-bg);
+}
+.markdown-preview pre code {
+    /* !important 压过 COMPAT 段 pre code 复位的 color: inherit !important */
+    color: var(--code-normal) !important;
+}
+.markdown-preview pre code .token.comment,
+.markdown-preview pre code .token.prolog,
+.markdown-preview pre code .token.doctype,
+.markdown-preview pre code .token.cdata { color: var(--code-comment); }
+.markdown-preview pre code .token.keyword,
+.markdown-preview pre code .token.selector,
+.markdown-preview pre code .token.atrule { color: var(--code-keyword); }
+.markdown-preview pre code .token.string,
+.markdown-preview pre code .token.char,
+.markdown-preview pre code .token.attr-value,
+.markdown-preview pre code .token.regex { color: var(--code-string); }
+.markdown-preview pre code .token.function,
+.markdown-preview pre code .token.class-name { color: var(--code-function); }
+.markdown-preview pre code .token.property,
+.markdown-preview pre code .token.attr-name,
+.markdown-preview pre code .token.parameter { color: var(--code-property); }
+.markdown-preview pre code .token.number,
+.markdown-preview pre code .token.boolean,
+.markdown-preview pre code .token.constant,
+.markdown-preview pre code .token.symbol,
+.markdown-preview pre code .token.builtin { color: var(--code-value); }
+.markdown-preview pre code .token.operator { color: var(--code-operator); }
+.markdown-preview pre code .token.punctuation { color: var(--code-punctuation); }
+.markdown-preview pre code .token.tag { color: var(--code-tag); }
+.markdown-preview pre code .token.important { color: var(--code-important); }
+
+
+/* ============ 章节自动编号兼容（生成脚本追加，注入 phycat-autonum.json 即开启） ============ */
+/* counter 作用域与自增位置（Chrome 实证三轮翻车后的最终形态）：
+   1) 作用域必须由 counter-reset 建立——无 reset 时每个 ::before 各自隐式建 0 起步的
+      计数器（编号恒为 1）。蒸馏的 .markdown-preview { counter-reset: h1 } 把作用域
+      锚在预览容器上，而分页器每页的 .mpe-sheet-body 都带 markdown-preview 类
+      （footer.js createSheet），每页重建作用域，第 2 页起编号错成 0.x。
+   2) 自增必须挂在标题元素上——挂在 ::before 上时自增值不出标题子树，跨页后计数
+      不连续（实测第 2 页 h2 全部重置为 1）。元素级自增 + ::before 只读显示是
+      CSS 规范的标准编号形态，分页器整块搬移 DOM 不影响。
+   3) 重置必须用 counter-set 而不是 counter-reset——作用域全部锚在 body 后，元素上的
+      counter-reset 会被 Chrome 忽略（正文读到的是 body 级同名计数器，实测 h1 上的
+      h2 reset 失效、2.x 持续累加）；counter-set 直接改写 body 级计数器的值，
+      重置与跨页接续同时成立（矩阵实测：reset 于同页失效，set 正确给出 2.1/2.2/2.3）。
+      六级作用域都锚 body：分页边界只延续 body 级作用域。蒸馏的各元素 counter-reset
+      统一撤成 none（既已无效也无害，撤掉防将来 Chrome 行为变化）。编号关闭时
+      计数器无显示，以上规则均无观感影响。 */
+body { counter-reset: h1 h2 h3 h4 h5 h6; }
+.markdown-preview { counter-reset: none; }
+.markdown-preview h1, .markdown-preview h2, .markdown-preview h3,
+.markdown-preview h4, .markdown-preview h5, .markdown-preview h6 { counter-reset: none; }
+.markdown-preview h1 { counter-increment: h1; counter-set: h2 0 h3 0 h4 0 h5 0 h6 0; }
+.markdown-preview h2 { counter-increment: h2; counter-set: h3 0 h4 0 h5 0 h6 0; }
+.markdown-preview h3 { counter-increment: h3; counter-set: h4 0 h5 0 h6 0; }
+.markdown-preview h4 { counter-increment: h4; counter-set: h5 0 h6 0; }
+.markdown-preview h5 { counter-increment: h5; counter-set: h6 0; }
+.markdown-preview h6 { counter-increment: h6; }
+/* 蒸馏规则把 h1/h2 自增挂在 ::before 上——编号开启时 ::before 盒生成、会与元素级
+   自增叠加成 1/3/5，这里关掉（::before 只保留显示职责）。编号关闭时 ::before 盒
+   不生成、自增本就不生效，关掉无影响。 */
+.markdown-preview h1:before,
+.markdown-preview h2:before { counter-increment: none; }
+.markdown-preview h3::before {
+    content: var(--autonum-h3, '');
+    position: var(--autonum-h3, absolute);
+    left: var(--autonum-h3, 0);
+    top: var(--autonum-h3, 50%);
+    transform: var(--autonum-h3, translateY(-50%));
+    width: var(--autonum-h3, 4px);
+    height: var(--autonum-h3, 16px);
+    border-radius: var(--autonum-h3, 2px);
+    background-color: var(--autonum-h3, var(--primary-color));
+    opacity: var(--autonum-h3, .8);
+}
+.markdown-preview h4::before {
+    content: var(--autonum-h4, '');
+    width: var(--autonum-h4, 8px);
+    height: var(--autonum-h4, 8px);
+    border-radius: var(--autonum-h4, 50%);
+    background-color: var(--autonum-h4, var(--primary-color));
+}
+.markdown-preview h5::before {
+    content: var(--autonum-h5, '');
+    width: var(--autonum-h5, 8px);
+    height: var(--autonum-h5, 8px);
+    border-radius: var(--autonum-h5, 50%);
+    background-color: var(--autonum-h5, transparent);
+    border: var(--autonum-h5, 1.5px solid var(--primary-color));
+}
+.markdown-preview h6::before {
+    content: var(--autonum-h6, '-');
+    color: var(--autonum-h6, var(--primary-color));
+}
+
+
+/* ============ 脚注选择器重映射（生成脚本追加，Typora 类 → crossnote 实际类） ============ */
+/* 上标引用文字（原 .footnote-word/.footnote-ref 的意图；压过 .markdown-preview a 链接色） */
+.markdown-preview .footnote-ref a {
+    font-weight: 700;
+    color: var(--accent-color);
+    margin-left: 2px;
+}
+
+/* 尾注条目文字（原 .footnote-item em → crossnote 条目正文是 li.footnote-item > p） */
+.markdown-preview .footnote-item p {
+    font-size: 14px;
+    color: #888;
+    font-style: italic;
 }

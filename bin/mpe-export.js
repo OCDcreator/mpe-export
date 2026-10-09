@@ -57,6 +57,7 @@ async function main() {
             '--pagination': '块级不断页：代码块/图片/引用块/callout 整块搬运不切断',
             '--pagination-level': '标题换页 h1|h2|h3：父章节内第一个该级标题不换页，其余起新页（蕴含 --pagination）',
             '--footer': '页脚：每页章节面包屑 + 页码（蕴含 --pagination）',
+            '--header': '页眉：每页顶部左侧文档标题、右侧当前章节（蕴含 --pagination，可与 --footer 同开）',
             '--toc': '目录页：正文前插入带真实页码的目录（蕴含 --pagination）',
             '--cover': '封面：html/png 插在最前（封面→目录→正文；蕴含 --pagination）',
           },
@@ -189,8 +190,10 @@ async function main() {
         printBackground: args.printBackground,
         chromePath: args.chromePath,
         preset: args.preset,
+        themeVars: args.themeVars,
         footerLabel: args.footerLabel,
         footer: args.footer,
+        header: args.header,
         pagination: args.pagination,
         noPagination: args.noPagination,
         paginationLevel: args.paginationLevel,
@@ -203,6 +206,9 @@ async function main() {
         mdNormalize: args.mdNormalize,
         bookmarks: args.bookmarks,
         mergeCells: args.mergeCells,
+        imgSize: args.imgSize,
+        lineNumbers: args.lineNumbers,
+        numberFigures: args.numberFigures,
         open: args.open,
       });
       results.push({ ...r, ok: true });

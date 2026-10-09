@@ -1,0 +1,8 @@
+{
+  "--autonum-h1": "counter(h1) \". \"",
+  "--autonum-h2": "counter(h1) \".\" counter(h2) \". \"",
+  "--autonum-h3": "counter(h1) \".\" counter(h2) \".\" counter(h3) \". \"",
+  "--autonum-h4": "counter(h1) \".\" counter(h2) \".\" counter(h3) \".\" counter(h4) \". \"",
+  "--autonum-h5": "counter(h1) \".\" counter(h2) \".\" counter(h3) \".\" counter(h4) \".\" counter(h5) \". \"",
+  "--autonum-h6": "counter(h1) \".\" counter(h2) \".\" counter(h3) \".\" counter(h4) \".\" counter(h5) \".\" counter(h6) \". \""
+}

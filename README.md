@@ -42,6 +42,8 @@ mpe-export <file.md> [<file2.md> ...] [选项]
                            onepage / onepage-dark: Obsidian OnePage 主题（暖白纸张 / 暖棕·冷锚）
       --bg-pattern         保留 phycat 预设的背景图案层（网格/圆点；默认剥离，打印更干净）
       --footer             PDF 启用独立页脚（见下文「自动分页与独立页脚」；与预设正交）
+      --header             PDF 启用运行页眉：每页顶部左侧文档标题、右侧当前
+                           章节路径（蕴含分页，与页脚同族、可同开）
       --pagination-level <h1|h2|h3>
                            标题换页（sheet 自动分页已默认开启）：父章节内第一个
                            该级标题不换页，其余该级标题各自起新页
@@ -80,7 +82,7 @@ mpe-export <file.md> [<file2.md> ...] [选项]
 退出码: 0 成功 | 1 导出失败 | 2 参数错误
 ```
 
-## 自动分页、页脚与目录页（--pagination / --footer / --toc，仅 PDF）
+## 自动分页、页眉页脚与目录页（--pagination / --header / --footer / --toc，仅 PDF）
 
 **sheet 自动分页（默认开启）**：PDF 默认不走 Chrome 原生分页，改在浏览器内
 按块自动分页（移植并通用化 scan 技能 postprocess_handout_for_contract.py 的
@@ -97,6 +99,12 @@ mpe-export <file.md> [<file2.md> ...] [选项]
 面包屑（当前节点橙色高亮）、右侧 `第 N/M 页`。字体：数字/西文 Georgia、
 中文思源宋体（均子集化内联）。
 
+**`--header`**（或 front-matter `header: true`）：在分页之上叠加运行页眉
+（蕴含分页，页脚的镜像）：每页顶部左侧文档标题、右侧当前章节路径
+（当前节点橙色高亮，含公式），底部 1px 细分隔线、9px 灰字，与页脚同一
+字体家族。与 `--footer` 同开时正文区上下各预留 ≥14mm（预设边距更大时
+保持预设值），互不遮挡。封面页无页眉；目录页页眉右侧显示「目录」。
+
 **`--toc`**（或 front-matter `toc: true`）：在正文前插入目录页（蕴含分页）。
 先按 sheet 排完正文拿到真实页码，再生成「标题 ··· 页码」条目；条目过多
 自动续页，页码计入目录页占用。`--toc-level h1|h2|h3`（默认 h3）控制收录
@@ -112,8 +120,10 @@ h3 跟着它不换页，从第二个 h3 起各自换页。`h2` 则只有二级�
 分页器按文档顺序预标记再填充，尾部留白回填不会跨越强制换页边界。
 
 页脚以绝对定位落在**下页边距带内**（距纸底 6mm），不挤占正文区——
-正文上下边距保持预设定义值，视觉对称。面包屑直接复用标题里已渲染的
-KaTeX 节点：标题含公式时页脚照常显示分式/上下标，并随页脚字号同比缩小。
+正文上下边距保持预设定义值，视觉对称；页眉与之镜像（距纸顶 6mm，
+上边距不足 14mm 时正文区下移让位）。面包屑/页眉章节直接复用标题里
+已渲染的 KaTeX 节点：标题含公式时照常显示分式/上下标，并随页眉页脚
+字号同比缩小。
 
 分页机制细节：
 
@@ -128,11 +138,12 @@ KaTeX 节点：标题含公式时页脚照常显示分式/上下标，并随页�
 5. 孤儿标题清扫：标题落在页尾时剥离并自然重排后续内容（保留标题换页标记）；
 6. 仍超页的图片等比缩小兜底（防裁切）；
 7.（仅 --toc）分页完成后按各页标题生成目录页，插在正文前，页码含目录占用；
-8.（仅 --footer）扫描每页标题（h1–h4）生成面包屑——页脚天然知道当前页章节位置。
+8.（仅 --footer / --header）扫描每页标题（h1–h4）生成面包屑——页脚/页眉天然知道当前页章节位置。
 
 ```bash
 mpe-export 笔记.md -f pdf --preset phycat-sakura               # 主题风格（自动分页已默认）
 mpe-export 讲义.md -f pdf --preset phycat --footer   # 讲义排版 + 分页 + scan 风格页脚
+mpe-export 讲义.md -f pdf --header --footer          # 运行页眉 + 页脚（上下都让位）
 mpe-export 笔记.md -f pdf --preset claude --footer   # claude 主题 + 同一页脚
 mpe-export 讲义.md -f pdf --preset phycat --pagination-level h3  # 每节起新页（节内首个小节跟随）
 mpe-export 讲义.md -f pdf --preset phycat --toc --footer         # 目录页 + 页脚页码
@@ -163,7 +174,7 @@ node tools/fix-md-spacing.js --check 讲义.md  # 只报告缺几个空行
 
 ## 表格单元格合并（默认开启）
 
-支持 MPE 扩展表格语法，与 Markdown Preview Enhanced 插件一致：
+支持 MPE 扩展表格语法，并补齐了 crossnote 缺失的 `<` 占位符：
 
 ```markdown
 | A | B | C |
@@ -171,18 +182,101 @@ node tools/fix-md-spacing.js --check 讲义.md  # 只报告缺几个空行
 | 1 | > | 3 |   ← 只含 > 的单元格向右合并（colspan）
 | ^ | x | 6 |   ← 只含 ^ 的单元格向上合并（rowspan）
 | 7 |   | 9 |   ← 空单元格向左合并（colspan）
+| 8 | < | < |   ← 只含 < 的单元格向左合并（colspan，链式正确）；
+                   crossnote 本身不识别 <，导出前由本工具归一成空格
 ```
+
+`<` 只在"表头行 + 分隔行"构成的表格块内、且整格内容恰为 `<` 时生效；
+`$a < b$`、`F < G`、`` `<` ``、`\<`、`<img …>` 等一律按原样渲染。callout
+内（`> | … |`）的表格同样支持。
+
+另修复 Chrome 的行组限制：CSS 2.1 会把 rowspan 裁剪在行组内，`^` 出现在
+表格第 2 行时 rowspan 落在 `<thead>` 上、跨不进 `<tbody>`（首列错位）。
+本工具检测到这类表时自动把整表拍平进单个 `<tbody>`（表加
+`mpe-table-flat` 类，th/td 与合并属性原样保留），rowspan 在组内正常渲染。
 
 crossnote 引擎本身默认关闭该语法，本工具改为**默认开启**。关闭方式
 （优先级从高到低）：
 
 1. `--config '{"enableExtendedTableSyntax": false}'`（引擎配置直通，最高）；
-2. `--no-merge-cells`，或源文件 front-matter `merge-cells: false`；
+2. `--no-merge-cells`，或源文件 front-matter `merge-cells: false`
+   （关闭后 `>` `^` `<` 都按普通文本渲染，也不做 thead 拍平）；
 3. 源目录 `.crossnote/config.js` 显式设置 `enableExtendedTableSyntax`
    （此时该键交给目录配置决定）。
 
 分页 PDF（`--pagination` 系列）对合并单元格同样安全：跨页拆表时分组单元格
-会复制到续页并裁短 rowspan，续表不缺列、不错位。
+会复制到续页并裁短 rowspan，续表不缺列、不错位（拍平表没有 thead，续页
+不重复表头，分组单元格照常续接）。
+
+## 图片数值宽度语法（默认开启）
+
+MPE 的图片尺寸写法，alt 末尾用 `|` 携带数值尺寸：
+
+```markdown
+![说明|400](img.png)        ← 宽 400px，高度等比（推荐）
+![说明|400x300](img.png)    ← 锁定宽 400px × 高 300px（MPE 语义，允许变形）
+![center|300](img.png)      ← 对齐关键词与尺寸同用：alt 去掉 `|300` 后仍含
+                               center，图片对齐语法照常命中
+```
+
+实现说明：crossnote 本身不支持该语法（`|400` 会原样留在 alt 里），本工具在
+导出时的 HTML 上把 alt 末尾尺寸 token 转成显式宽高，其余 alt 文本原样保留。
+显式宽度与图片宽度兜底（`max-width:100%; height:auto`）协作：单值宽度超页宽
+时被钳制回正文宽、高度跟随等比；`WxH` 双值按 MPE 语义锁定两维（被钳制时
+高度固定，极端比例图会变形，属显式要求的取舍）。
+
+关闭方式：`--no-image-size`，或源文件 front-matter `image-size: false`。
+
+## 代码块行号（--line-numbers，默认关）
+
+```bash
+mpe-export 笔记.md --preset phycat-sky --line-numbers --format pdf
+```
+
+- 开启后全部非图表代码块（mermaid/plantuml 等图表块除外）显示行号列；
+- 底层用 crossnote 原生能力（Prism Line Numbers 插件 DOM：独立的绝对定位
+  行号列 + CSS counter），行号列按行盒计数、与代码高亮令牌是否跨行无关，
+  分页时代码块作为原子块整块搬运、行号列随行；
+- 单个代码块可随时用 ```` ```lang {.line-numbers} ```` 手工开启（不受总开关
+  影响，总开关关闭时也生效）；
+- 已知取舍：代码块软换行（pre-wrap）时折行会使后续行号逐行错位（行号列
+  无法感知折行），长行代码请控制行宽；
+- front-matter 等价写法：`line-numbers: true`。
+
+## 图表编号（--number-figures，默认关）
+
+```bash
+mpe-export 报告.md --number-figures --format pdf
+```
+
+紧跟**块级图片**（段落内只有一张 img）或**表格**的第一个段落，若以
+`图` / `表` / `Figure` / `Table` 开头（后接可选空格 + 可选序号 + 可选
+冒号），视为该图/表的题注，开头被改写为顺序编号：
+
+```markdown
+![系统结构](img/structure.png)
+
+图：系统结构          ← 导出为「图 1：系统结构」
+
+| 姓名 | 成绩 |
+|------|------|
+| 张三 | 92   |
+
+表 3：成绩汇总        ← 导出为「表 1：成绩汇总」（原有编号被规范替换）
+```
+
+- `图`/`Figure` 与 `表`/`Table` **独立计数**，按文档出现顺序递增；题注词须
+  与对象类型对应（图片后跟「表…」段落不认，反之亦然）；
+- 编号在**分页前的 DOM 上直接写进题注文本**（onDidParseMarkdown 钩子），
+  跨页大表被分页器拆片克隆时天然带着最终编号——不跳号、不重复（CSS
+  counter 方案会在拆片克隆上重复自增，故不采用）；
+- 匹配不到题注的图/表不编号、不占号，也不插入任何内容——纯增量，不发明
+  结构；编号始终连续（图 1、图 2…中间不留空号）；
+- 隔了空行以外的任何元素（正文段、其他图/表）不算「紧跟」；段首带行内
+  标记的题注（如 `**图 1：…**`）不改写、按无题注处理；
+- 已有编号（`图 3：`、`Figure 2:`、`图1-2`）会被规范替换为本轮顺序号；
+- HTML 导出同样生效（同一管线）；
+- front-matter 等价写法：`number-figures: true`。
 
 ## 排版预设（--preset）
 
@@ -297,9 +391,19 @@ mpe-export 笔记.md --format html --preset onepage-dark   # 暗色 · 暖棕·�
 `phycat.light.css` / `phycat.dark.css` 两个基底 + 各变体的 `:root` 变量覆盖蒸馏生成，
 一次产出全部 11 个预设 CSS）。统一特征：霞鹜文楷正文（CJK 按文档字符子集化内联）、
 Cascadia Code 等宽（已 base64 内联）、正文 14px、标题阶梯 24/21/18/16/15/14px、
-五级 callout 配色、代码块卡片头（红绿灯 + 右上角语言标签）、PDF `@page` 满版背景。主题自带的标题自动编号（`--autonum-*`
-变量）在生成时已统一剥离——导出不带编号；如需恢复，注释掉
-`build-phycat-preset.js` 中剥离 `--autonum-*` 的那段后重新生成即可。
+五级 callout 配色、代码块卡片头（红绿灯 + 右上角语言标签）、PDF `@page` 满版背景。
+主题自带的标题自动编号（`--autonum-*` 变量）默认关闭（定义剥离至
+`lib/presets/phycat-autonum.json`，11 个变体定义一致只此一份），按需注入开启：
+
+```bash
+# 章节自动编号（h1-h6 显示 1. / 1.1. / 1.1.1. …，随章节递增）
+mpe-export 笔记.md --preset phycat-mint --theme-vars "$(cat lib/presets/phycat-autonum.json)"
+# 或写进 front-matter（YAML 映射）：
+# theme-vars:
+#   "--autonum-h1": 'counter(h1) ". "'
+#   "--autonum-h2": 'counter(h1) "." counter(h2) ". "'
+#   ...（照抄 phycat-autonum.json 各键）
+```
 
 | 预设 | 配色 | 亮/暗 |
 |------|------|-------|
@@ -325,7 +429,36 @@ mpe-export 笔记.md --format pdf --preset phycat-vampire    # 暗色
 > 对应主题的背景 mask 机制）；暗变体整页铺 `--bg-color` + 圆点纹理，含页边距。
 > 暗变体默认 monokai 代码高亮 + mermaid dark 主题。
 > 重新生成样式：`node tools/build-phycat-preset.js [主题源目录]`（默认
-> `C:/GhostDownload/Archives/typora-theme-phycat`）。
+> `C:/Users/lt/Desktop/Write/open-source-project/typora-theme-phycat`）。
+>
+> 图片对齐语法（同步自 obsidian-theme-phycat 0.3.x）：phycat 变体下图片 alt 含
+> `left`/`center`/`right`/`banner`（或缩写 +L/+C/+R）时分别靠左/居中/靠右/通栏裁切，
+> 如 `![center](img.png)`；无关键词的图片维持默认居中。图片数值宽度语法
+> `![center|300](img.png)` 与对齐关键词可同用（见「图片数值宽度语法」节）。
+>
+> mermaid 全图型主题变量（2026-10 起）：流程图沿用预设 CSS 的 `!important`
+> 规则（节点/子图/连线标签变体主题色，优先级高于一切），其余图型（时序图/
+> 饼图/甘特图/状态图等）由导出器从变体调色板提取 `--element-color`（暗变体
+> 走 `--primary-color`）等变量生成 mermaid `themeVariables` 注入——一处驱动
+> 全部图型：亮变体 mermaid default 主题、暗变体 dark 主题之上叠加变体色
+> （节点/actor/便签/扇区/任务条带变体色调、文字用正文色保对比、画布贴纸色）。
+> `--theme-vars` 改调色板变量时 mermaid 配色同步跟随（同一套提取管线）。
+> 非 phycat 预设不注入，mermaid 行为不变。
+>
+> 代码高亮与调色（同步自 obsidian-theme-phycat 0.3.5 调色板）：11 个变体各带完整
+> `--code-*` 调色板，代码块底色与令牌色（关键字/注释/字符串/函数/数字等）按变体
+> 着色，构建期校验注释对比度并对低于 4.5:1 的变体打印 WARN 告警（不中断构建）。
+>
+> 文档级调色：`--theme-vars '<JSON>'` 或 front-matter `theme-vars`（YAML 映射，值含
+> `#` 须加引号）可覆盖任何走 CSS 变量的颜色，优先级 CLI > front-matter。例如改强调
+> 色与关键字：`--theme-vars '{"--element-color":"#e74c3c","--code-keyword":"#c0392b"}'`。
+> 标题逐级颜色可用 `--h1-color`..`--h6-color` 覆盖（如只改 h2：
+> `--theme-vars '{"--h2-color":"#1a5fb4"}'`），其余标题不受影响。
+> h2 胶囊等固化渐变请覆盖对应变量（如 `--head-title-h2-background`）；`@page` 页面
+> 底色与 callout 图标色为构建期固化值，不响应 theme-vars。
+> 值字符限制：值中不得含 `;` `{` `}` `<` `>`，也不得含 `url(` / `expression(` /
+> `@import`（不区分大小写），含任一模式的键整条跳过并经 stderr 告警（其余键照常
+> 生效）。颜色/长度/字体栈/`counter(h1) ". "` 这类纯声明值不受影响。
 
 ## 参数控制（三层，高→低）
 
