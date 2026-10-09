@@ -21,7 +21,9 @@
  *  6. --footer 同开：两者都在、互不重叠，正文上下各让位 14mm，
  *     页脚距纸底 6mm，页码 第 N/M 页 正确；
  *  7. 封面页无页眉无页脚；目录页页眉右侧显示「目录」；
- *  8. front-matter `header: true` 与 CLI --header 两条开关路径都生效。
+ *  8. front-matter `header: true` 与 CLI --header 两条开关路径都生效；
+ *  9. 目录页不写进章节路径 carry-over：目录页后的无标题正文页，页眉右侧
+ *     恢复为文档标题去头后的状态（不含「目录」），页脚面包屑恢复为文档标题。
  *
  * 量测方式：exportMarkdown 真实 PDF 导出 + MPE_KEEP_TMP_HTML 保留打印 HTML，
  * Chrome 重放分页 DOM 做几何量测（与现有分页测试同款 harness）。
@@ -186,6 +188,31 @@ async function measureSheets(browser, printHtml, timeoutMs) {
     '---',
     '',
     bodyMarkdown(),
+  ].join('\n'), 'utf8');
+
+  // 目录 carry-over 变体：目录页之后先排两页无标题正文（800px 块），首个
+  // 标题（文档 h1）出现在其后 —— 复现「目录残留」缺陷的页面序列
+  const tocCarryMd = path.join(tmp, 'header-toc-carry.md');
+  fs.writeFileSync(tocCarryMd, [
+    '---',
+    `title: ${DOC_TITLE}`,
+    'header: true',
+    '---',
+    '',
+    '<div style="height:800px">目录后无标题内容块一</div>',
+    '',
+    '<div style="height:800px">目录后无标题内容块二</div>',
+    '',
+    `# ${DOC_TITLE}`,
+    '',
+    `## ${SEC1}`,
+    '',
+    '<div style="height:800px">第一章内容块</div>',
+    '',
+    `## ${SEC2}`,
+    '',
+    '第二章正文段落。',
+    '',
   ].join('\n'), 'utf8');
 
   const browser = await puppeteer.launch({ executablePath: detectChrome(), headless: true });
@@ -422,11 +449,89 @@ async function measureSheets(browser, printHtml, timeoutMs) {
         sheets[sheets.length - 1].footer.pageLabel,
       );
     }
+
+    // ============ 场景 4：目录页后的无标题正文页不残留「目录」 ============
+    // 目录页不写进章节路径 carry-over：目录页页眉右侧/页脚面包屑照常显示
+    // 「目录」，出目录即恢复进目录前的路径 —— 目录之后、首个标题之前的
+    // 无标题正文页：页眉右侧 = 文档标题去头后的空串，页脚面包屑 = 文档标题。
+    {
+      const { printHtml } = await exportPdfAndCapturePrintHtml({
+        file: tocCarryMd,
+        format: 'pdf',
+        outDir: tmp,
+        header: true,
+        footer: true,
+        toc: true,
+        cover: 'cover.html',
+      });
+      const sheets = await measureSheets(browser, printHtml, 120000);
+      expect(sheets[0].cover, '第 1 页应是封面', sheets[0].cover);
+      expect(sheets[1].toc, '第 2 页应是目录', sheets[1].toc);
+
+      // 目录页自身照常显示「目录」：页眉右侧 + 页脚面包屑
+      expect(!!sheets[1].header, '目录页应有页眉', !!sheets[1].header);
+      expect(
+        sheets[1].header.sectionText === '目录',
+        '目录页页眉右侧应显示「目录」',
+        sheets[1].header.sectionText,
+      );
+      expect(
+        sheets[1].footer.breadcrumb.includes('目录'),
+        '目录页页脚面包屑应显示「目录」',
+        sheets[1].footer.breadcrumb,
+      );
+
+      // 目录之后、首个标题之前的无标题正文页（本变体前两页正文只有 800px 块）
+      const bodySheets = sheets.slice(2);
+      const headingFreeRun = [];
+      for (const sh of bodySheets) {
+        if (sh.headings.length > 0) break;
+        headingFreeRun.push(sh);
+      }
+      expect(
+        headingFreeRun.length >= 1,
+        '变体应存在目录后的无标题正文页（页面序列设计）',
+        bodySheets.map((s) => s.headings),
+      );
+      headingFreeRun.forEach((sh, i) => {
+        expect(
+          sh.header.sectionText === '',
+          `无标题正文第 ${i + 1} 页页眉右侧应恢复为文档标题去头后的空串，不得残留「目录」`,
+          sh.header.sectionText,
+        );
+        expect(
+          sh.footer.breadcrumb === DOC_TITLE,
+          `无标题正文第 ${i + 1} 页页脚面包屑应恢复为文档标题，不得残留「目录」`,
+          sh.footer.breadcrumb,
+        );
+      });
+
+      // 恢复后的标题页照常生效：页眉去文档标题头，页脚保留完整面包屑
+      const firstHeadingSheet = bodySheets[headingFreeRun.length];
+      expect(
+        !!firstHeadingSheet && firstHeadingSheet.headings.includes(SEC1),
+        '无标题段之后应有第一章标题页',
+        bodySheets.map((s) => s.headings),
+      );
+      expect(
+        firstHeadingSheet.header.sectionText === SEC1,
+        '第一章标题页页眉右侧应为第一章（文档标题去头）',
+        firstHeadingSheet.header.sectionText,
+      );
+      expect(
+        firstHeadingSheet.footer.breadcrumb.includes(DOC_TITLE) &&
+          firstHeadingSheet.footer.breadcrumb.includes(SEC1),
+        '第一章标题页页脚面包屑应为 文档标题 > 第一章',
+        firstHeadingSheet.footer.breadcrumb,
+      );
+    }
   } finally {
     await browser.close();
   }
 
-  console.log(`header-e2e: 完成 ${pass} 项断言通过（--header / --header+--footer / 封面+目录 三场景）`);
+  console.log(
+    `header-e2e: 完成 ${pass} 项断言通过（--header / --header+--footer / 封面+目录 / 目录后无标题正文 四场景）`,
+  );
 })().catch((error) => {
   console.error(error.message || error);
   process.exitCode = 1;

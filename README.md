@@ -450,7 +450,8 @@ mpe-export 笔记.md --format pdf --preset phycat-vampire    # 暗色
 > 着色，构建期校验注释对比度并对低于 4.5:1 的变体打印 WARN 告警（不中断构建）。
 >
 > 文档级调色：`--theme-vars '<JSON>'` 或 front-matter `theme-vars`（YAML 映射，值含
-> `#` 须加引号）可覆盖任何走 CSS 变量的颜色，优先级 CLI > front-matter。例如改强调
+> `#` 须加引号；front-matter 值也可以整体写成 JSON 字符串，与 CLI 同形）可覆盖任何
+> 走 CSS 变量的颜色，优先级 CLI > front-matter。例如改强调
 > 色与关键字：`--theme-vars '{"--element-color":"#e74c3c","--code-keyword":"#c0392b"}'`。
 > 标题逐级颜色可用 `--h1-color`..`--h6-color` 覆盖（如只改 h2：
 > `--theme-vars '{"--h2-color":"#1a5fb4"}'`），其余标题不受影响。
