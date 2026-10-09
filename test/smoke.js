@@ -95,7 +95,7 @@ check('parseArgs 识别 --theme-vars（JSON 原样透传，导出侧再解析校
 });
 
 check('buildThemeVarsOverride：CLI 优先、YAML 映射、非法键跳过、坏 JSON 报错', () => {
-  const { buildThemeVarsOverride } = require('../lib/exporter');
+  const { buildThemeVarsOverride } = require('../lib/theme-vars');
   // CLI JSON
   const cli = buildThemeVarsOverride('{"--element-color":"#e74c3c"}', undefined);
   if (!cli || !cli.includes('--element-color: #e74c3c;')) {
@@ -127,7 +127,7 @@ check('buildThemeVarsOverride：CLI 优先、YAML 映射、非法键跳过、坏
 });
 
 check('buildThemeVarsOverride：值消毒——越界值整键跳过并经 stderr 告警，合法值放行', () => {
-  const { buildThemeVarsOverride, themeVarsValueRejectReason } = require('../lib/exporter');
+  const { buildThemeVarsOverride, themeVarsValueRejectReason } = require('../lib/theme-vars');
   // 拦截 stderr 告警（同时守卫 stdout 纯净铁律：提示必须走 stderr）
   const origWrite = process.stderr.write;
   let warned = '';
@@ -272,7 +272,7 @@ check('表格单元格合并默认开启且 --no-merge-cells 可关', () => {
 });
 
 check('图片数值宽度 ![alt|400] 转 style 宽高，alt 其余文本保留', () => {
-  const { rewriteImageSizeHtml } = require('../lib/exporter');
+  const { rewriteImageSizeHtml } = require('../lib/html-transforms');
   const src =
     '<p><img src="a.png" alt="plain|400"></p>' +
     '<p><img src="b.png" alt="center|400x300"></p>' +
@@ -316,7 +316,7 @@ check('图片数值宽度 ![alt|400] 转 style 宽高，alt 其余文本保留',
 });
 
 check('代码块行号：补 class + 行号列 DOM，图表块跳过、原生块不重复', () => {
-  const { addLineNumbersToCodeBlocks } = require('../lib/exporter');
+  const { addLineNumbersToCodeBlocks } = require('../lib/html-transforms');
   const native =
     '<pre data-role="codeBlock" data-info="js {.line-numbers}" class="language-javascript js line-numbers"><code><span class="token keyword">const</span> a = 1;\nconst b = 2;\n</code></pre>';
   const plain =
@@ -341,7 +341,7 @@ check('代码块行号：补 class + 行号列 DOM，图表块跳过、原生块
 });
 
 check('图表编号：多图多表独立计数、规范替换、无题注不编号、假题注不动、幂等', () => {
-  const { numberFigureCaptions } = require('../lib/exporter');
+  const { numberFigureCaptions } = require('../lib/html-transforms');
   // 形态与引擎 parseMD 产物一致（块间 \n 分隔）
   const src = [
     '<h1 id="x">X </h1>',
@@ -445,12 +445,10 @@ check('--number-figures 导出生效、默认关零改动、front-matter 等价'
 });
 
 check('mermaid 全图型主题变量：亮/暗映射与变量残缺兜底链', () => {
-  const {
-    parseCssColor,
-    mixCssColors,
-    extractPaletteColors,
-    buildMermaidThemeVariables,
-  } = require('../lib/exporter');
+  const { parseCssColor } = require('../lib/css-color');
+  const { mixCssColors, extractPaletteColors, buildMermaidThemeVariables } = require(
+    '../lib/mermaid-theme',
+  );
   if (parseCssColor('var(--x)') !== null) throw new Error('var() 引用不应被当作颜色');
   if (mixCssColors('#3498db', '#ffffff', 0.88) !== '#e7f3fb') {
     throw new Error('混色计算错误: ' + mixCssColors('#3498db', '#ffffff', 0.88));
@@ -489,10 +487,8 @@ check('mermaid 全图型主题变量：亮/暗映射与变量残缺兜底链', (
 check('css-color：统一颜色解析（短/长 hex、alpha、rgb()/rgba()、非法输入）', () => {
   const { parseCssColor, luminance, contrastRatio } = require('../lib/css-color');
   const eq = (got, want) => JSON.stringify(got) === JSON.stringify(want);
-  // exporter 侧应直接复用同一实现（防再次漂移）
-  if (require('../lib/exporter').parseCssColor !== parseCssColor) {
-    throw new Error('exporter 未复用 lib/css-color 的 parseCssColor');
-  }
+  // 单一实现：parseCssColor 仅定义于 lib/css-color.js，exporter / mermaid-theme /
+  // tools 构建器一律 require 此处（同名实现漂移已从源头消除，行为断言即防漂移）
   // 短 hex：通道倍增；#rgba 第 4 位为 alpha（/255 归一）
   if (!eq(parseCssColor('#3ab'), [51, 170, 187, 1])) throw new Error('#3ab 解析错误');
   if (!eq(parseCssColor('#3ab9'), [51, 170, 187, 153 / 255])) throw new Error('#3ab9 解析错误');
